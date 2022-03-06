@@ -6,7 +6,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openqa.selenium.*;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -22,9 +21,9 @@ public class RgStrah {
         System.setProperty("webdriver.gecko.driver", "src/test/resources/geckodriver.exe");
         driver = new FirefoxDriver();
         driver.manage().window().maximize();
-        driver.manage().timeouts().pageLoadTimeout(5, TimeUnit.SECONDS);
-        driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
-        wait = new WebDriverWait(driver, 12, 3000);
+        driver.manage().timeouts().pageLoadTimeout(10, TimeUnit.SECONDS);
+        driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+        wait = new WebDriverWait(driver, 15, 3000);
 
         driver.get("https://www.rgs.ru");
     }
@@ -36,24 +35,37 @@ public class RgStrah {
         cookie.click();
         WebElement baseMenu = driver.findElement(By.xpath("//a[contains(text(), 'Компаниям')]"));
         baseMenu.click();
+        waitUntilElementToBeVisible(By.xpath("//span[contains(text(), 'Здоровье')]"));
         WebElement nextMenu = driver.findElement(By.xpath("//span[contains(text(), 'Здоровье')]"));
+        waitUntilElementToBeClickable(nextMenu);
         nextMenu.click();
         WebElement targetMenu = driver.findElement(By.xpath("//a[contains(text(), 'Добровольное медицинское страхование')]"));
+        waitUntilElementToBeVisible(targetMenu);
         targetMenu.click();
 
         wait.until(ExpectedConditions.textToBe(By.xpath("//h1[@class='title word-breaking title--h2']"), "Добровольное медицинское страхование"));
 
-
-//        Assert.assertEquals("Страница не загрузилась", "Добровольное медицинское страхование", titleDms.getText());
-
         WebElement sendButton = driver.findElement(By.xpath("//span[contains(text(), 'Отправить заявку')]"));
         sendButton.click();
+
+        String fieldXPath = "//input[@name='%s']";
+        waitUntilElementToBeClickable(driver.findElement(By.xpath(String.format(fieldXPath, "userName"))));
+        fillInputField(driver.findElement(By.xpath(String.format(fieldXPath, "userName"))), "Иванов Иван Иванович");
+        fillInputPhoneField(driver.findElement(By.xpath(String.format(fieldXPath, "userTel"))), "911", "111", "1111");
+        fillInputField(driver.findElement(By.xpath(String.format(fieldXPath, "userEmail"))), "superEmail");
+        fillInputField(driver.findElement(By.xpath("//input[@class='vue-dadata__input']")), "Чудогород, Чудоулица 3");
+
+        WebElement check = driver.findElement(By.xpath("//div[@class='checkbox-body form__checkbox']"));
+        check.click();
+        check.submit();
+
+        waitUntilElementToBeVisible(By.xpath("//span[contains(text(), 'Введите корректный адрес электронной почты')]"));
 
     }
 
     @After
     public void after() {
-//        driver.quit();
+        driver.quit();
     }
 
     private void waitUntilElementToBeClickable(WebElement element) {
@@ -83,18 +95,19 @@ public class RgStrah {
         Assert.assertTrue("Поле было заполнено неверно.", checkFlag);
     }
 
-    private void pressDown() {
-        try {
-            Actions action = new Actions(driver);
-            action.keyDown(Keys.ARROW_DOWN).keyUp(Keys.ARROW_DOWN).perform();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    private void fillInputPhoneField(WebElement element, String value1, String value2, String value3) {
+        scrollToElementJs(element);
+        waitUntilElementToBeVisible(element);
+        element.click();
+        element.clear();
+        element.sendKeys(value1);
+        element.sendKeys(value2);
+        element.sendKeys(value3);
+        boolean checkFlag =
+                wait.until(ExpectedConditions.attributeContains(
+                        element, "value", "+7 (" + value1 + ") " + value2 + "-" + value3));
+        Assert.assertTrue("Поле было заполнено неверно.", checkFlag);
     }
+
 }
 
-//        try {
-//            Thread.sleep(3000);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
